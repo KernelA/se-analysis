@@ -20,7 +20,7 @@
   * Visual Studio 2017.
   * .Net Framework 4.7.
 * Часть, написанная на Python:
-  * Версия Python 3.5 или выше.
+  * Версия Python 3.6 или выше.
   * Установленные пакеты [matplotlib](https://matplotlib.org/), [pandas](http://pandas.pydata.org/), [numpy](http://www.numpy.org/).
 
 ## Как запускать
