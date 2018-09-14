@@ -80,7 +80,7 @@ namespace SEA
 
             if (!Directory.Exists(pathToDir))
             {
-                _log.Info($"\n\tThe directory '{pathToDir}' does not exist.");
+                Console.WriteLine($"\n\tThe directory '{pathToDir}' does not exist.");
                 return 1;
             }
 
@@ -94,11 +94,11 @@ namespace SEA
 
                 if (isEmptyDir)
                 {
-                    _log.Info($"The directory '{Path.Combine(".", resDir)}' is not empty. Need to clear '{resDir}'.\nDo you want to delete all subdirectories and files?");
+                    Console.WriteLine($"The directory '{Path.Combine(".", resDir)}' is not empty. Need to clear '{resDir}'.\nDo you want to delete all subdirectories and files?");
 
                     do
                     {
-                        _log.Info("\nEnter 'Y/y' or 'N/n'.");
+                        Console.WriteLine("\nEnter 'Y/y' or 'N/n'.");
 
                         answer = Console.ReadKey().KeyChar;
 
@@ -106,11 +106,11 @@ namespace SEA
 
                     } while (answer != 'y' && answer != 'n');
 
-                    _log.Info("\n");
+                    Console.WriteLine("\n");
 
                     if (answer == 'n')
                     {
-                        _log.Info($"The program need to clear '{resDir}' for further work. Save all files from '{resDir}' and rerun program.");
+                        Console.WriteLine($"The program need to clear '{resDir}' for further work. Save all files from '{resDir}' and rerun program.");
                         return 0;
                     }
                     else if (answer == 'y')
@@ -127,37 +127,22 @@ namespace SEA
 
             DirectoryInfo datasetsDir = new DirectoryInfo(pathToDir);
 
-            LinkedList<FileInfo> files = new LinkedList<FileInfo>();
-
             foreach (DirectoryInfo datasetDir in datasetsDir.EnumerateDirectories())
             {
                 _log.Info($"Filling tables from '{datasetDir.Name}'.");
 
-                long totalSize = 0;
+                FileInfo[] files = datasetDir.EnumerateFiles("*.xml").Where(file => _acceptedNames.Contains(Path.GetFileNameWithoutExtension(file.Name.ToLower()))).ToArray();
 
-                foreach (FileInfo file in datasetDir.EnumerateFiles("*.xml"))
+                long totalSize = files.Select(file => file.Length).Sum();
+
+                if (totalSize > maxFilesSizeInBytes)
                 {
-                    if (_acceptedNames.Contains(Path.GetFileNameWithoutExtension(file.Name)))
-                    {
-                        totalSize += file.Length;
-
-                        if (totalSize > maxFilesSizeInBytes)
-                        {
-                            _log.Info("\tExceeded maximum size of files.\n\tThe directory skipped.");
-                            files.Clear();
-                            break;
-                        }
-                        else
-                        {
-                            files.AddLast(file);
-                        }
-                    }
+                    _log.Info("\tExceeded maximum size of files.\n\tThe directory skipped.");
+                    break;
                 }
-
-                if (files.Count != 0)
+                else
                 {
                     DataSet dataSet = LoadDataSet(files, datasetDir.Name);
-                    files.Clear();
                     Stat.CollectStat(dataSet, resDir);
                 }
             }
